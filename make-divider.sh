@@ -9,9 +9,10 @@
 # The name is injected into divider.scad's `label` variable via OpenSCAD's -D
 # flag (the .scad file itself is not modified); the text is always rendered in
 # UPPERCASE regardless of how the name is typed. By default the output STL is
-# written into the stl/ directory, named after the input: lowercased, spaces
-# replaced with '-'. An optional second argument overrides the output path
-# (used verbatim, relative to the current directory).
+# written into the stl/ directory, named after the input: lowercased, with
+# spaces and hyphens both replaced by '_'. Hyphens are kept in the card TEXT
+# (they are only normalised away in the filename). An optional second argument
+# overrides the output path (used verbatim, relative to the current directory).
 
 set -euo pipefail
 
@@ -45,13 +46,15 @@ fi
 if [[ $# -ge 2 && -n "${2:-}" ]]; then
     output="$2"
 else
-    # lowercase, collapse whitespace runs to single '-', strip anything that
-    # isn't alphanumeric or '-', and trim leading/trailing hyphens.
+    # The filename uses '_' as its only separator so that '-' is free to appear
+    # in the card text without affecting names. Steps: lowercase, turn each run
+    # of whitespace or hyphens into a single '_', drop anything that isn't
+    # alphanumeric or '_', collapse repeated '_', and trim leading/trailing '_'.
     slug="$(printf '%s' "$label" \
         | tr '[:upper:]' '[:lower:]' \
-        | tr -s '[:space:]' '-' \
-        | tr -cd '[:alnum:]-' \
-        | sed 's/^-*//; s/-*$//')"
+        | sed -E 's/[[:space:]-]+/_/g' \
+        | tr -cd '[:alnum:]_' \
+        | sed -E 's/_+/_/g; s/^_+//; s/_+$//')"
 
     if [[ -z "$slug" ]]; then
         echo "Error: name '$label' produced an empty filename." >&2

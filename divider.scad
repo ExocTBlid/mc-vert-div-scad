@@ -19,7 +19,7 @@
 label = "JESSICA JONES";
 // Font family (must be available to OpenSCAD; use the family name reported by
 // `fc-list`, not the .ttf filename. See Help > Font List inside OpenSCAD).
-font = "Marvel:style=Regular";
+font = "BentonSans ExtraComp Black:style=Regular";
 // Cap height of the text, in mm.
 text_size = 8;
 // Horizontal alignment on the card: "center", "left", "right".
