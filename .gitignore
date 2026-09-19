@@ -1,0 +1,6 @@
+# Generated STL output — keep the directory, ignore its contents.
+*.stl
+
+# Keep the stl/ directory itself in the repo.
+!stl/
+!stl/.gitkeep
