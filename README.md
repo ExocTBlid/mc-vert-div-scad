@@ -1,8 +1,6 @@
 # Marvel Champions Vertical Dividers - 3D OpenSCAD
 
-Parametric OpenSCAD template for printing labeled divider cards, reverse-engineered
-from a reference STL. Each card is a rounded-rectangle plate with a raised name
-and a full-width ridge along the top edge — swap the name per print.
+Parametric OpenSCAD template for printing labeled divider cards. Each card is a rounded-rectangle plate with a raised name and a full-width ridge along the top edge — swap the name per print.
 
 These dividers are sized to fit
 [BCW trading card boxes](https://www.bcwsupplies.com/trading-card/trading-card-boxes).
@@ -13,12 +11,20 @@ These dividers are sized to fit
 mc-vert-div-scad/
 ├── divider.scad        # the parametric model
 ├── make-divider.sh     # render one name -> stl/<slug>.stl
+├── make-divider.ps1    # PowerShell equivalent (Windows)
 ├── fetch-names.sh      # pull hero/villain/encounter name lists from marvelcdb data
+├── fetch-names.ps1     # PowerShell equivalent (Windows)
 ├── divider-menu.sh     # interactive / piped front-end over make-divider.sh
+├── divider-menu.ps1    # PowerShell equivalent (Windows)
 ├── names/              # generated name lists (heroes.txt, villains.txt, encounters.txt)
 ├── stl/                # generated STL output
 └── README.md
 ```
+
+Every `.sh` script has a matching `.ps1` PowerShell version with identical
+behavior, so the tool runs on Windows as well as macOS/Linux. Examples in this
+README show the bash form; the [Windows / PowerShell](#windows--powershell)
+section lists the equivalents.
 
 ## Requirements
 
@@ -27,8 +33,12 @@ mc-vert-div-scad/
   Check with:
 
   ```sh
-  fc-list | grep -i benton
+  fc-list | grep -i benton     # macOS/Linux
   ```
+
+  On Windows, confirm the font is installed via Settings > Personalization >
+  Fonts, or list it in PowerShell with
+  `[System.Drawing.Text.InstalledFontCollection]::new().Families`.
 
   OpenSCAD looks fonts up by *family* name (the value reported by `fc-list`),
   not by the file name. To use a different font, edit `font` in `divider.scad`.
@@ -82,7 +92,8 @@ flag), so `divider.scad` itself is never modified.
 | `names/villains.txt` | `villain` | Villain names (stages like Rhino I/II/III collapse to one). |
 | `names/encounters.txt` | `modular` | Encounter set names (e.g. "Bomb Scare"). |
 
-Requires `curl` and `python3`.
+Requires `curl` and `python3`. The PowerShell version (`fetch-names.ps1`) has no
+extra dependencies — it uses PowerShell's built-in web and JSON support.
 
 ## Interactive / batch generation
 
@@ -115,6 +126,32 @@ printf 'Thor\nLoki\n' | ./divider-menu.sh
 
 Every name flows through `make-divider.sh`, so the uppercase text, preserved
 hyphens, `_` filenames, and `stl/` output stay consistent across all paths.
+
+## Windows / PowerShell
+
+Each shell script has a PowerShell twin ([PowerShell 7+](https://github.com/PowerShell/PowerShell),
+`pwsh`) that behaves identically. Only OpenSCAD is required — `fetch-names.ps1`
+does not need `curl` or `python3`.
+
+| Bash | PowerShell |
+|---|---|
+| `./make-divider.sh "Jessica Jones"` | `./make-divider.ps1 "Jessica Jones"` |
+| `./make-divider.sh "Spider Man" out.stl` | `./make-divider.ps1 "Spider Man" out.stl` |
+| `./fetch-names.sh` | `./fetch-names.ps1` |
+| `./divider-menu.sh` | `./divider-menu.ps1` |
+| `cat my-list.txt \| ./divider-menu.sh` | `Get-Content my-list.txt \| ./divider-menu.ps1` |
+| `printf 'Thor\nLoki\n' \| ./divider-menu.sh` | `"Thor","Loki" \| ./divider-menu.ps1` |
+| `./divider-menu.sh < names/heroes.txt` | `Get-Content names\heroes.txt \| ./divider-menu.ps1` |
+
+The interactive menu, list selection syntax (`1 3 5`, `2-6`, `all`), automatic
+fit, and naming rules all work the same as the bash versions.
+
+If PowerShell blocks the scripts with an execution-policy error, allow local
+scripts for your user:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+```
 
 ## Customizing the design
 
@@ -163,6 +200,28 @@ openscad -o stl/custom.stl \
   divider.scad
 ```
 
+## Printing
+
+These are the slicer settings I use (PrusaSlicer). Adjust to taste for your own
+printer and filament.
+
+| Setting | Value |
+|---|---|
+| Printer | Prusa Mini (stock/default profile) |
+| Print settings | **0.15mm SPEED** |
+| Filament | Generic PLA |
+| Per plate | 2 dividers (the Mini's bed fits two at a time) |
+| Color change | at **1.10mm** |
+
+**About the color change:** the card base is 1.0mm thick and the text and ridge
+sit 0.5mm proud on top of it (so they reach 1.5mm). Pausing for a filament color
+change at 1.10mm — just above the base — prints the card body in one color and
+the raised name and ridge in a second, making the label stand out. In
+PrusaSlicer, add the color change on the vertical slider at the 1.10mm height.
+
+If you change `base_thickness` or `emboss_height` in `divider.scad`, move the
+color-change height accordingly: set it a hair above the new `base_thickness`.
+
 ## Design notes
 
 The model reproduces three raised elements measured from the reference STL:
@@ -171,7 +230,3 @@ The model reproduces three raised elements measured from the reference STL:
 - **Raised text** along the top, embossed 0.5 mm proud of the plate.
 - A **full-width ridge** (rule line) ~10 mm below the top edge, ~1 mm thick,
   raised the same 0.5 mm.
-
-STL is only a triangle mesh, so the original could not be converted back into
-clean OpenSCAD directly. Instead the mesh was measured (dimensions, layer
-heights, feature positions) and rebuilt as this parametric template.
