@@ -4,6 +4,9 @@ Parametric OpenSCAD template for printing labeled divider cards, reverse-enginee
 from a reference STL. Each card is a rounded-rectangle plate with a raised name
 and a full-width ridge along the top edge — swap the name per print.
 
+These dividers are sized to fit
+[BCW trading card boxes](https://www.bcwsupplies.com/trading-card/trading-card-boxes).
+
 ## What's here
 
 ```
@@ -46,6 +49,13 @@ This writes `stl/jessica_jones.stl`. The card text is always rendered in
 **UPPERCASE** ("JESSICA JONES"). The filename is lowercased, with spaces and
 hyphens both collapsed to underscores (`_`); a hyphen you type still shows up in
 the card text, it just doesn't appear in the filename.
+
+**Automatic fit:** long names are handled for you. Before rendering, the wrapper
+measures the label's natural width and, if it would overflow the usable card
+width, squeezes the text to fit (equivalent to `fit_to_width=true` for that one
+render). Names that already fit are left at their natural proportions, so short
+labels are never stretched. You'll see a note like
+`(label 117mm > usable 67mm — fitting to width)` when a name is compressed.
 
 Provide an explicit output path as a second argument to override the default:
 
@@ -118,7 +128,7 @@ override any of them from the command line with `-D name=value`. Key parameters:
 | `font` | `"BentonSans ExtraComp Black:style=Regular"` | Font family (per `fc-list`). |
 | `text_size` | `8` | Cap height of the text, in mm. |
 | `text_halign` | `"center"` | Alignment: `"center"`, `"left"`, `"right"`. |
-| `fit_to_width` | `false` | Stretch text to span the full usable width for a uniform look. When `false`, text keeps its natural proportions. |
+| `fit_to_width` | `false` | Force text to span the full usable width. Normally left `false` — `make-divider.sh` sets it automatically, per render, only when a name would overflow (see [Automatic fit](#quick-start)). Set it `true` yourself if you want *every* label stretched to a uniform width. |
 
 ### Card body
 | Parameter | Default | Meaning |
